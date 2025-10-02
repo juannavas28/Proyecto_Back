@@ -18,6 +18,40 @@ Authorization: Bearer <token>
 
 ## Endpoints de Autenticación
 
+### POST /auth/register
+**HU3.1** - Registro de usuarios
+
+**Request:**
+```json
+{
+  "email": "nuevo@universidad.edu",
+  "password": "contraseña123",
+  "nombre": "Juan",
+  "apellido": "Pérez",
+  "telefono": "123456789",
+  "rol": "organizador"
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Usuario registrado exitosamente",
+  "data": {
+    "user": {
+      "id": 2,
+      "email": "nuevo@universidad.edu",
+      "nombre": "Juan",
+      "apellido": "Pérez",
+      "telefono": "123456789",
+      "rol": "organizador",
+      "fecha_registro": "2024-01-15T12:00:00.000Z"
+    }
+  }
+}
+```
+
 ### POST /auth/login
 **HU3.2** - Autenticación de usuarios
 
@@ -65,6 +99,88 @@ Obtener información del usuario actual (requiere autenticación)
       "fecha_registro": "2024-01-15T10:30:00.000Z"
     }
   }
+}
+```
+
+### PUT /auth/profile
+**HU3.3** - Edición de perfil de usuario (requiere autenticación)
+
+**Request:**
+```json
+{
+  "nombre": "Juan Carlos",
+  "apellido": "Pérez García",
+  "telefono": "987654321",
+  "email": "juan.carlos@universidad.edu"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Perfil actualizado exitosamente",
+  "data": {
+    "user": {
+      "id": 1,
+      "email": "juan.carlos@universidad.edu",
+      "nombre": "Juan Carlos",
+      "apellido": "Pérez García",
+      "telefono": "987654321",
+      "rol": "organizador",
+      "fecha_registro": "2024-01-15T10:30:00.000Z",
+      "fecha_actualizacion": "2024-01-15T14:00:00.000Z"
+    }
+  }
+}
+```
+
+### POST /auth/forgot-password
+**HU3.4** - Recuperación de credenciales
+
+**Request:**
+```json
+{
+  "email": "usuario@universidad.edu"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Si el email existe en nuestro sistema, recibirás un enlace para restablecer tu contraseña",
+  "resetToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." // Solo en desarrollo
+}
+```
+
+### POST /auth/reset-password
+**HU3.4** - Restablecimiento de contraseña
+
+**Request:**
+```json
+{
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "newPassword": "nuevaContraseña123"
+}
+```
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Contraseña restablecida exitosamente"
+}
+```
+
+### POST /auth/logout
+**HU3.5** - Cierre de sesión (requiere autenticación)
+
+**Response (200):**
+```json
+{
+  "success": true,
+  "message": "Sesión cerrada exitosamente"
 }
 ```
 
@@ -223,6 +339,52 @@ Obtener información del usuario actual (requiere autenticación)
 ---
 
 ## Endpoints de Eventos
+
+### POST /events
+**HU1.1** - Registro de evento (requiere autenticación + rol admin/organizador)
+
+**Request:**
+```json
+{
+  "titulo": "Conferencia de Innovación",
+  "descripcion": "Evento sobre las últimas tendencias en innovación tecnológica",
+  "fecha_inicio": "2024-03-15T09:00:00.000Z",
+  "fecha_fin": "2024-03-15T17:00:00.000Z",
+  "ubicacion": "Auditorio Central",
+  "capacidad_maxima": 150,
+  "costo_entrada": 25,
+  "categoria": "Conferencia",
+  "organizacion_externa_id": 1
+}
+```
+
+**Response (201):**
+```json
+{
+  "success": true,
+  "message": "Evento creado exitosamente",
+  "data": {
+    "event": {
+      "id": 2,
+      "titulo": "Conferencia de Innovación",
+      "descripcion": "Evento sobre las últimas tendencias en innovación tecnológica",
+      "fecha_inicio": "2024-03-15T09:00:00.000Z",
+      "fecha_fin": "2024-03-15T17:00:00.000Z",
+      "ubicacion": "Auditorio Central",
+      "capacidad_maxima": 150,
+      "costo_entrada": 25,
+      "categoria": "Conferencia",
+      "estado": "borrador",
+      "organizador_id": 1,
+      "organizador_nombre": "Juan",
+      "organizador_apellido": "Pérez",
+      "organizacion_externa_id": 1,
+      "organizacion_nombre": "Empresa ABC",
+      "fecha_creacion": "2024-01-15T12:00:00.000Z"
+    }
+  }
+}
+```
 
 ### GET /events
 Listar eventos (con paginación)
@@ -450,3 +612,4 @@ npm start
 ```
 
 El servidor estará disponible en `http://localhost:3000`
+

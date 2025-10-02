@@ -6,11 +6,16 @@ Backend API RESTful para el Sistema de Gestión de Eventos Universitarios (SIGEU
 ## Características Implementadas
 
 ### Sprint 1
+- ✅ **HU3.1** - Registro de usuarios
 - ✅ **HU3.2** - Autenticación de usuarios (login con JWT)
+- ✅ **HU3.3** - Edición de perfil de usuario
+- ✅ **HU3.4** - Recuperación de credenciales
+- ✅ **HU3.5** - Cierre de sesión
 - ✅ **HU2.1** - Registro de organización externa
 - ✅ **HU2.2** - Búsqueda de organización externa
 - ✅ **HU2.3** - Visualización de datos de organización externa
 - ✅ **HU2.4** - Edición de organización externa
+- ✅ **HU1.1** - Registro de evento
 
 ### Sprint 2
 - ✅ **HU1.2** - Edición de evento antes de validación
@@ -96,8 +101,13 @@ El servidor estará disponible en `http://localhost:3000`
 ## Endpoints Principales
 
 ### Autenticación
+- `POST /api/auth/register` - Registro de usuario
 - `POST /api/auth/login` - Login de usuario
 - `GET /api/auth/me` - Información del usuario actual
+- `PUT /api/auth/profile` - Editar perfil de usuario
+- `POST /api/auth/forgot-password` - Recuperación de contraseña
+- `POST /api/auth/reset-password` - Restablecer contraseña
+- `POST /api/auth/logout` - Cierre de sesión
 
 ### Organizaciones
 - `GET /api/organizations` - Listar organizaciones
@@ -107,6 +117,7 @@ El servidor estará disponible en `http://localhost:3000`
 - `PUT /api/organizations/:id` - Actualizar organización
 
 ### Eventos
+- `POST /api/events` - Crear evento
 - `GET /api/events` - Listar eventos
 - `GET /api/events/:id` - Obtener evento por ID
 - `PUT /api/events/:id` - Editar evento

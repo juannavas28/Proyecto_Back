@@ -312,9 +312,93 @@ const getEventsByStatus = async (req, res) => {
   }
 };
 
+// HU1.1 - Registro de evento
+const createEvent = async (req, res) => {
+  try {
+    const { 
+      titulo, 
+      descripcion, 
+      fecha_inicio, 
+      fecha_fin, 
+      ubicacion, 
+      capacidad_maxima,
+      costo_entrada,
+      categoria,
+      organizacion_externa_id
+    } = req.body;
+
+    const organizador_id = req.user.id;
+
+    // Verificar que la organización externa existe (si se proporciona)
+    if (organizacion_externa_id) {
+      const orgCheckQuery = 'SELECT id FROM organizaciones_externas WHERE id = ? AND activo = 1';
+      const orgExists = await executeQuery(orgCheckQuery, [organizacion_externa_id]);
+
+      if (orgExists.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Organización externa no encontrada o inactiva'
+        });
+      }
+    }
+
+    // Insertar nuevo evento
+    const insertQuery = `
+      INSERT INTO eventos 
+      (titulo, descripcion, fecha_inicio, fecha_fin, ubicacion, capacidad_maxima, 
+       costo_entrada, categoria, estado, organizador_id, organizacion_externa_id, fecha_creacion)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'borrador', ?, ?, NOW())
+    `;
+
+    const result = await executeQuery(insertQuery, [
+      titulo,
+      descripcion,
+      fecha_inicio,
+      fecha_fin,
+      ubicacion,
+      capacidad_maxima || null,
+      costo_entrada || 0,
+      categoria || 'General',
+      organizador_id,
+      organizacion_externa_id || null
+    ]);
+
+    // Obtener el evento creado con información del organizador y organización
+    const newEventQuery = `
+      SELECT e.*, 
+             u.nombre as organizador_nombre, 
+             u.apellido as organizador_apellido,
+             o.nombre as organizacion_nombre
+      FROM eventos e
+      LEFT JOIN usuarios u ON e.organizador_id = u.id
+      LEFT JOIN organizaciones_externas o ON e.organizacion_externa_id = o.id
+      WHERE e.id = ?
+    `;
+    const newEvent = await executeQuery(newEventQuery, [result.insertId]);
+
+    res.status(201).json({
+      success: true,
+      message: 'Evento creado exitosamente',
+      data: {
+        event: newEvent[0]
+      }
+    });
+
+  } catch (error) {
+    console.error('Error creando evento:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
 module.exports = {
+  createEvent,
   updateEvent,
   submitEventForValidation,
   getEventById,
   getEventsByStatus
 };
+

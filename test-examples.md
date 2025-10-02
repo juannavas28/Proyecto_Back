@@ -25,6 +25,21 @@ npm run dev
 ### 1. Autenticación (HU3.2)
 
 **Login:**
+### Registro de Usuario (HU3.1)
+```bash
+curl -X POST http://localhost:3000/api/auth/register \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "nuevo@universidad.edu",
+    "password": "contraseña123",
+    "nombre": "Juan",
+    "apellido": "Pérez",
+    "telefono": "123456789",
+    "rol": "organizador"
+  }'
+```
+
+### Login (HU3.2)
 ```bash
 curl -X POST http://localhost:3000/api/auth/login \
   -H "Content-Type: application/json" \
@@ -32,6 +47,42 @@ curl -X POST http://localhost:3000/api/auth/login \
     "email": "admin@universidad.edu",
     "password": "admin123"
   }'
+```
+
+### Editar Perfil de Usuario (HU3.3)
+```bash
+curl -X PUT http://localhost:3000/api/auth/profile \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN_AQUI" \
+  -d '{
+    "nombre": "Juan Carlos",
+    "apellido": "Pérez García",
+    "telefono": "987654321"
+  }'
+```
+
+### Recuperación de Contraseña (HU3.4)
+```bash
+# Solicitar recuperación
+curl -X POST http://localhost:3000/api/auth/forgot-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "email": "usuario@universidad.edu"
+  }'
+
+# Restablecer contraseña
+curl -X POST http://localhost:3000/api/auth/reset-password \
+  -H "Content-Type: application/json" \
+  -d '{
+    "token": "TOKEN_DE_RECUPERACION",
+    "newPassword": "nuevaContraseña123"
+  }'
+```
+
+### Cierre de Sesión (HU3.5)
+```bash
+curl -X POST http://localhost:3000/api/auth/logout \
+  -H "Authorization: Bearer TU_TOKEN_AQUI"
 ```
 
 **Respuesta esperada:**
@@ -100,6 +151,24 @@ curl -X PUT http://localhost:3000/api/organizations/1 \
 ```
 
 ### 3. Eventos
+
+**Crear evento (HU1.1):**
+```bash
+curl -X POST http://localhost:3000/api/events \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer TU_TOKEN_AQUI" \
+  -d '{
+    "titulo": "Conferencia de Innovación",
+    "descripcion": "Evento sobre las últimas tendencias en innovación tecnológica y desarrollo de software",
+    "fecha_inicio": "2024-03-15T09:00:00.000Z",
+    "fecha_fin": "2024-03-15T17:00:00.000Z",
+    "ubicacion": "Auditorio Central",
+    "capacidad_maxima": 150,
+    "costo_entrada": 25,
+    "categoria": "Conferencia",
+    "organizacion_externa_id": 1
+  }'
+```
 
 **Obtener eventos:**
 ```bash

@@ -31,3 +31,4 @@ router.get('/:id', authenticateToken, getOrganizationById);
 router.put('/:id', authenticateToken, requireRole(['admin', 'organizador']), validateOrganizationData, updateOrganization);
 
 module.exports = router;
+
