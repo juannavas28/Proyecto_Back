@@ -6,7 +6,7 @@ const {
   getOrganizationById,
   updateOrganization,
   getAllOrganizations,
-  delateOrganization
+  deleteOrganization
 
 } = require('../controllers/organizationController');
 const { validateOrganizationData } = require('../middleware/validation');
