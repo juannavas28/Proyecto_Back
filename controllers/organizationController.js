@@ -284,11 +284,65 @@ const getAllOrganizations = async (req, res) => {
   }
 };
 
+// HU2.5 - Eliminación de organización externa (soft delete)
+const deleteOrganization = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Verificar que la organización exista
+    const checkQuery = 'SELECT id, activo FROM organizaciones_externas WHERE id = ?';
+    const organization = await executeQuery(checkQuery, [id]);
+
+    if (organization.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'La organización externa no existe.'
+      });
+    }
+
+    // Validar que la organización no esté ya inactiva
+    if (organization[0].activo === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'La organización ya está eliminada o inactiva.'
+      });
+    }
+
+    // Desactivar la organización (eliminación lógica)
+    const updateQuery = `
+      UPDATE organizaciones_externas 
+      SET activo = 0, fecha_actualizacion = NOW() 
+      WHERE id = ?
+    `;
+    await executeQuery(updateQuery, [id]);
+
+    // Confirmar la eliminación
+    res.status(200).json({
+      success: true,
+      message: 'Organización externa eliminada exitosamente.',
+      data: {
+        id,
+        estado: 'inactiva'
+      }
+    });
+
+  } catch (error) {
+    console.error('Error eliminando organización externa:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor.',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
+  }
+};
+
+
 module.exports = {
   createOrganization,
   searchOrganizations,
   getOrganizationById,
   updateOrganization,
-  getAllOrganizations
+  getAllOrganizations,
+  deleteOrganization
 };
 
