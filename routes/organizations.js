@@ -30,5 +30,10 @@ router.get('/:id', authenticateToken, getOrganizationById);
 // PUT /api/organizations/:id
 router.put('/:id', authenticateToken, requireRole(['admin', 'organizador']), validateOrganizationData, updateOrganization);
 
+// HU2.5 - Eliminación de organización externa
+// DELETE /api/organizations/:id
+router.delete('/:id', authenticateToken, requireRole(['admin']), deleteOrganization);
+
+
 module.exports = router;
 
