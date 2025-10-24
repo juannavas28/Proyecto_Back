@@ -1,39 +1,35 @@
-const express = require('express');
+// routes/auth.js
+const express = require("express");
 const router = express.Router();
-const { register, login, verifyToken, getCurrentUser, updateProfile, forgotPassword, resetPassword, logout } = require('../controllers/authController');
-const { validateUserData, validateUserRegistrationData, validateUserProfileData, validateForgotPasswordData, validateResetPasswordData } = require('../middleware/validation');
-const { authenticateToken } = require('../middleware/auth');
+
+// Importar controlador de autenticación
+const {
+  registerUser,
+  loginUser,
+  getCurrentUser,
+  updateProfile,
+  forgotPassword,
+  resetPassword,
+  logoutUser
+} = require("../controllers/authController");
 
 // HU3.1 - Registro de usuarios
-// POST /api/auth/register
-router.post('/register', validateUserRegistrationData, register);
+router.post("/register", registerUser);
 
-// HU3.2 - Login de usuarios
-// POST /api/auth/login
-router.post('/login', validateUserData, login);
+// HU3.2 - Autenticación de usuarios (login)
+router.post("/login", loginUser);
 
-// Verificar token válido
-// GET /api/auth/verify
-router.get('/verify', authenticateToken, verifyToken);
+// HU3.3 - Obtener información del usuario actual
+router.get("/me", getCurrentUser);
 
-// Obtener información del usuario actual
-// GET /api/auth/me
-router.get('/me', authenticateToken, getCurrentUser);
-
-// HU3.3 - Edición de perfil de usuario
-// PUT /api/auth/profile
-router.put('/profile', authenticateToken, validateUserProfileData, updateProfile);
+// HU3.3 - Actualizar perfil de usuario
+router.put("/profile", updateProfile);
 
 // HU3.4 - Recuperación de credenciales
-// POST /api/auth/forgot-password
-router.post('/forgot-password', validateForgotPasswordData, forgotPassword);
-
-// POST /api/auth/reset-password
-router.post('/reset-password', validateResetPasswordData, resetPassword);
+router.post("/forgot-password", forgotPassword);
+router.post("/reset-password", resetPassword);
 
 // HU3.5 - Cierre de sesión
-// POST /api/auth/logout
-router.post('/logout', authenticateToken, logout);
+router.post("/logout", logoutUser);
 
 module.exports = router;
-
