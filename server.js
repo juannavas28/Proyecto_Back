@@ -18,7 +18,11 @@ const PORT = process.env.PORT || 3000;
 // Middleware de seguridad
 app.use(helmet());
 
+<<<<<<< HEAD
 // Configuración de CORS (ajustado para permitir al frontend en 5173)
+=======
+// Configuración de CORS
+>>>>>>> d03dc4a0b82a6bccaf46cf435ce916f26d85e793
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
@@ -167,4 +171,7 @@ startServer();
 
 module.exports = app;
 
+<<<<<<< HEAD
 
+=======
+>>>>>>> d03dc4a0b82a6bccaf46cf435ce916f26d85e793
