@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express'); 
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -20,7 +20,7 @@ app.use(helmet());
 
 // Configuración de CORS
 app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
@@ -100,7 +100,6 @@ app.use('*', (req, res) => {
 app.use((error, req, res, next) => {
   console.error('Error no manejado:', error);
 
-  // Error de validación de JSON
   if (error.type === 'entity.parse.failed') {
     return res.status(400).json({
       success: false,
@@ -108,7 +107,6 @@ app.use((error, req, res, next) => {
     });
   }
 
-  // Error de límite de tamaño
   if (error.type === 'entity.too.large') {
     return res.status(413).json({
       success: false,
@@ -116,7 +114,6 @@ app.use((error, req, res, next) => {
     });
   }
 
-  // Error genérico del servidor
   res.status(500).json({
     success: false,
     message: 'Error interno del servidor',
@@ -127,15 +124,12 @@ app.use((error, req, res, next) => {
 // Función para iniciar el servidor
 const startServer = async () => {
   try {
-    // Probar conexión a la base de datos
     const dbConnected = await testConnection();
-    
     if (!dbConnected) {
       console.error('❌ No se pudo conectar a la base de datos. Saliendo...');
       process.exit(1);
     }
 
-    // Iniciar servidor
     app.listen(PORT, () => {
       console.log(`🚀 Servidor SIGEU Backend ejecutándose en puerto ${PORT}`);
       console.log(`📊 Entorno: ${process.env.NODE_ENV || 'development'}`);
