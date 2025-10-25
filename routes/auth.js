@@ -10,8 +10,11 @@ const {
   updateProfile,
   forgotPassword,
   resetPassword,
-  logoutUser
+  logoutUser,
 } = require("../controllers/authController");
+
+// Importar middlewares de autenticación JWT
+const { authenticateToken, requireRole } = require("../middleware/auth");
 
 // HU3.1 - Registro de usuarios
 router.post("/register", registerUser);
@@ -20,16 +23,16 @@ router.post("/register", registerUser);
 router.post("/login", loginUser);
 
 // HU3.3 - Obtener información del usuario actual
-router.get("/me", getCurrentUser);
+router.get("/me", authenticateToken, getCurrentUser);
 
 // HU3.3 - Actualizar perfil de usuario
-router.put("/profile", updateProfile);
+router.put("/profile", authenticateToken, updateProfile);
 
 // HU3.4 - Recuperación de credenciales
 router.post("/forgot-password", forgotPassword);
 router.post("/reset-password", resetPassword);
 
 // HU3.5 - Cierre de sesión
-router.post("/logout", logoutUser);
+router.post("/logout", authenticateToken, logoutUser);
 
 module.exports = router;

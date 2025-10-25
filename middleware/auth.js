@@ -1,72 +1,34 @@
-const jwt = require('jsonwebtoken');
-const { executeQuery } = require('../db');
+const jwt = require("jsonwebtoken");
 
-// Middleware para verificar el token JWT
-const authenticateToken = async (req, res, next) => {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1]; // Bearer TOKEN
+// Middleware para verificar token JWT
+const authenticateToken = (req, res, next) => {
+  const authHeader = req.headers.authorization;
 
-  if (!token) {
-    return res.status(401).json({
-      success: false,
-      message: 'Token de acceso requerido'
-    });
-  }
+  if (!authHeader)
+    return res.status(401).json({ success: false, message: "Token no proporcionado" });
+
+  const token = authHeader.split(" ")[1];
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    
-    // Verificar que el usuario aún existe en la base de datos
-    const userQuery = 'SELECT id, email, nombre, rol FROM usuarios WHERE id = ? AND activo = 1';
-    const users = await executeQuery(userQuery, [decoded.userId]);
-    
-    if (users.length === 0) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuario no encontrado o inactivo'
-      });
-    }
-
-    req.user = users[0];
+    req.user = decoded; // guarda info del usuario (id, rol, etc.)
     next();
   } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
-        success: false,
-        message: 'Token expirado'
-      });
-    }
-    
-    return res.status(403).json({
-      success: false,
-      message: 'Token inválido'
-    });
+    return res.status(401).json({ success: false, message: "Token inválido o expirado" });
   }
 };
 
-// Middleware para verificar roles específicos
-const requireRole = (roles) => {
+// Middleware para verificar rol de usuario
+const requireRole = (rolesPermitidos) => {
   return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
-        success: false,
-        message: 'Usuario no autenticado'
-      });
-    }
-
-    if (!roles.includes(req.user.rol)) {
+    if (!req.user || !rolesPermitidos.includes(req.user.rol)) {
       return res.status(403).json({
         success: false,
-        message: 'Permisos insuficientes'
+        message: "Acceso denegado: rol no autorizado",
       });
     }
-
     next();
   };
 };
 
-module.exports = {
-  authenticateToken,
-  requireRole
-};
-
+module.exports = { authenticateToken, requireRole };

@@ -151,12 +151,26 @@ const getCurrentUser = async (req, res) => {
     });
   }
 };
-
 // HU3.3 - Actualizar perfil
 const updateProfile = async (req, res) => {
   try {
-    const { nombre, apellido, telefono, email } = req.body;
-    const userId = req.user.id;
+    let { nombre, apellido, telefono, email } = req.body;
+    const userId = req.user?.userId; // ID desde el token JWT
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "No se pudo identificar al usuario desde el token",
+      });
+    }
+
+    // Evitar undefined → usar null
+    nombre = nombre ?? null;
+    apellido = apellido ?? null;
+    telefono = telefono ?? null;
+    email = email ?? null;
+
+    console.log("📨 Datos recibidos:", { nombre, apellido, telefono, email, userId });
 
     const updateQuery = `
       UPDATE usuarios
@@ -168,14 +182,14 @@ const updateProfile = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Perfil actualizado exitosamente'
+      message: "Perfil actualizado exitosamente",
     });
-
   } catch (error) {
-    console.error('Error actualizando perfil:', error);
+    console.error("Error actualizando perfil:", error);
     res.status(500).json({
       success: false,
-      message: 'Error interno del servidor'
+      message: "Error interno del servidor",
+      error: error.message,
     });
   }
 };
