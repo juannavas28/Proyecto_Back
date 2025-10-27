@@ -5,7 +5,8 @@ const {
   updateEvent,
   submitEventForValidation,
   getEventById,
-  getEventsByStatus
+  getEventsByStatus,
+  getPendingEvents
 } = require('../controllers/eventController');
 const { validateEventData, validateEventCreationData } = require('../middleware/validation');
 const { authenticateToken, requireRole } = require('../middleware/auth');
@@ -29,6 +30,11 @@ router.put('/:id', authenticateToken, requireRole(['admin', 'organizador']), val
 // HU1.5 - Envío de evento a validación/aprobación
 // POST /api/events/:id/submit-validation
 router.post('/:id/submit-validation', authenticateToken, requireRole(['admin', 'organizador']), submitEventForValidation);
+
+// HU4.1 - Visualización de eventos pendientes de evaluación
+// GET /api/events/pending
+router.get('/pending', authenticateToken, requireRole(['admin', 'validador']), getPendingEvents);
+
 
 module.exports = router;
 
