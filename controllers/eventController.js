@@ -394,10 +394,54 @@ const createEvent = async (req, res) => {
   }
 };
 
+// HU4.1 - Visualización de eventos pendientes de evaluación
+const getPendingEvents = async (req, res) => {
+  try {
+    const query = `
+      SELECT 
+        e.id,
+        e.titulo,
+        e.descripcion,
+        e.fecha_inicio,
+        e.fecha_fin,
+        e.ubicacion,
+        e.fecha_envio_validacion,
+        e.estado,
+        u.nombre AS organizador_nombre,
+        u.apellido AS organizador_apellido,
+        o.nombre AS organizacion_nombre
+      FROM eventos e
+      LEFT JOIN usuarios u ON e.organizador_id = u.id
+      LEFT JOIN organizaciones_externas o ON e.organizacion_externa_id = o.id
+      WHERE e.estado = 'pendiente_revision'
+      ORDER BY e.fecha_envio_validacion DESC;
+    `;
+
+    const events = await executeQuery(query);
+
+    res.status(200).json({
+      success: true,
+      message: 'Eventos pendientes de evaluación obtenidos correctamente',
+      data: {
+        total: events.length,
+        events
+      }
+    });
+  } catch (error) {
+    console.error('Error obteniendo eventos pendientes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error interno del servidor'
+    });
+  }
+};
+
+
 module.exports = {
   createEvent,
   updateEvent,
   submitEventForValidation,
   getEventById,
-  getEventsByStatus
+  getEventsByStatus,
+  getPendingEvents
 };
