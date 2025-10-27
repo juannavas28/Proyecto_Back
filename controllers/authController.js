@@ -6,6 +6,15 @@ const { executeQuery } = require('../db');
 const registerUser = async (req, res) => {
   try {
     const { email, password, nombre, apellido, telefono, rol = 'organizador' } = req.body;
+    
+    // Validar que la contraseña no esté vacía o contenga solo espacios
+if (!password || password.trim().length < 6) {
+  return res.status(400).json({
+    success: false,
+    message: 'La contraseña no puede estar vacía, contener solo espacios y debe tener al menos 6 caracteres.'
+  });
+}
+
 
     // Verificar si ya existe un usuario con el mismo email
     const checkQuery = 'SELECT id FROM usuarios WHERE email = ?';
@@ -67,6 +76,15 @@ const registerUser = async (req, res) => {
 const loginUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    
+    // Validar que la contraseña no esté vacía o contenga solo espacios
+if (!password || password.trim().length === 0) {
+  return res.status(400).json({
+    success: false,
+    message: 'Debe ingresar una contraseña válida.'
+  });
+}
+
 
     const userQuery = `
       SELECT id, email, password, nombre, apellido, rol, activo 
