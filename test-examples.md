@@ -158,13 +158,11 @@ curl -X POST http://localhost:3000/api/events \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TU_TOKEN_AQUI" \
   -d '{
-    "titulo": "Conferencia de Innovación",
+    "nombre:evento": "Conferencia de Innovación",
     "descripcion": "Evento sobre las últimas tendencias en innovación tecnológica y desarrollo de software",
     "fecha_inicio": "2024-03-15T09:00:00.000Z",
     "fecha_fin": "2024-03-15T17:00:00.000Z",
     "ubicacion": "Auditorio Central",
-    "capacidad_maxima": 150,
-    "costo_entrada": 25,
     "categoria": "Conferencia",
     "organizacion_externa_id": 1
   }'
@@ -188,13 +186,11 @@ curl -X PUT http://localhost:3000/api/events/1 \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer TU_TOKEN_AQUI" \
   -d '{
-    "titulo": "Conferencia de Inteligencia Artificial",
+    "nombre_evento": "Conferencia de Inteligencia Artificial",
     "descripcion": "Evento sobre las últimas tendencias en IA y machine learning",
     "fecha_inicio": "2024-03-15T09:00:00.000Z",
     "fecha_fin": "2024-03-15T17:00:00.000Z",
     "ubicacion": "Auditorio Central",
-    "capacidad_maxima": 250,
-    "costo_entrada": 0,
     "categoria": "Conferencia"
   }'
 ```
@@ -294,7 +290,7 @@ VALUES (
 ### Insertar evento de prueba:
 
 ```sql
-INSERT INTO eventos (titulo, descripcion, fecha_inicio, fecha_fin, ubicacion, capacidad_maxima, costo_entrada, categoria, estado, organizador_id, organizacion_externa_id, fecha_creacion) 
+INSERT INTO eventos (nombre_evento, descripcion, fecha_inicio, fecha_fin, ubicacion, categoria, estado, organizador_id, organizacion_externa_id, fecha_creacion) 
 VALUES (
   'Evento de Prueba', 
   'Este es un evento de prueba para testing', 

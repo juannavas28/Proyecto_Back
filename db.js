@@ -35,6 +35,18 @@ const testConnection = async () => {
 // Función para ejecutar consultas con prepared statements
 const executeQuery = async (query, params = []) => {
   try {
+    if (Array.isArray(params)) {
+      const undefinedIndexes = [];
+      for (let i = 0; i < params.length; i++) {
+        if (params[i] === undefined) {
+          undefinedIndexes.push(i);
+          params[i] = null; // normaliza a NULL para MySQL
+        }
+      }
+      if (undefinedIndexes.length) {
+        console.warn('⚠️ executeQuery: parámetros undefined normalizados a null en índices:', undefinedIndexes);
+      }
+    }
     const [rows] = await pool.execute(query, params);
     return rows;
   } catch (error) {

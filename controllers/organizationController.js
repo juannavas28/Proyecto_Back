@@ -1,47 +1,61 @@
+const path = require('path');
+const fs = require('fs');
 const { executeQuery } = require('../db');
 
-// HU2.1 - Registro de organización externa (INSERT)
+// HU2.1 - Registro de organización externa (según esquema)
 const createOrganization = async (req, res) => {
   try {
-    const { nombre, email, telefono, direccion, descripcion, tipo_organizacion } = req.body;
+    const { nombre, nit, representante_legal, telefono, email, ubicacion, actividad_principal, tipo_organizacion = 'OTRA' } = req.body;
 
     // Verificar si ya existe una organización con el mismo nombre
-    const checkQuery = 'SELECT id FROM organizaciones_externas WHERE nombre = ?';
-    const existing = await executeQuery(checkQuery, [nombre]);
+    const checkQuery = 'SELECT id FROM organizaciones_externas WHERE nombre = ? OR nit = ?';
+    const existing = await executeQuery(checkQuery, [nombre, nit || null]);
 
     if (existing.length > 0) {
+      // Si ya existe, borrar el archivo recién subido para no dejar basura
       return res.status(409).json({
         success: false,
-        message: 'Ya existe una organización con ese nombre'
+        message: 'Ya existe una organización con ese nombre o NIT'
       });
     }
 
-    // Insertar nueva organización
+    // Insertar nueva organización con posible archivo
     const insertQuery = `
       INSERT INTO organizaciones_externas 
-      (nombre, email, telefono, direccion, descripcion, tipo_organizacion, fecha_registro, activo)
-      VALUES (?, ?, ?, ?, ?, ?, NOW(), 1)
+      (nombre, nit, representante_legal, telefono, email, ubicacion, actividad_principal, tipo_organizacion, fecha_registro, activo, creado_por)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), 1, ?)
     `;
 
     const result = await executeQuery(insertQuery, [
       nombre,
-      email || null,
-      telefono || null,
-      direccion || null,
-      descripcion || null,
-      tipo_organizacion || 'General'
+      nit,
+      representante_legal,
+      telefono,
+      email,
+      ubicacion || null,
+      actividad_principal || null,
+      tipo_organizacion,
+      req.user?.id || null
     ]);
 
     // Obtener la organización creada
     const newOrgQuery = 'SELECT * FROM organizaciones_externas WHERE id = ?';
     const newOrg = await executeQuery(newOrgQuery, [result.insertId]);
 
+    // Si se subió un archivo, devolver su URL (no lo guardamos en BD para mantener compatibilidad)
+    let fileUrl = null;
+    if (req.file) {
+      const host = req.protocol + '://' + req.get('host');
+      fileUrl = host + '/uploads/' + req.file.filename;
+    }
+
+    const responseData = { organization: newOrg[0] };
+    if (fileUrl) responseData.file = { certificado_pdf: fileUrl };
+
     res.status(201).json({
       success: true,
       message: 'Organización creada exitosamente',
-      data: {
-        organization: newOrg[0]
-      }
+      data: responseData
     });
 
   } catch (error) {
@@ -54,10 +68,10 @@ const createOrganization = async (req, res) => {
   }
 };
 
-// HU2.2 - Búsqueda de organización externa (SELECT con filtro por nombre)
+// HU2.2 - Búsqueda de organización externa (filtros por nombre, NIT, tipo)
 const searchOrganizations = async (req, res) => {
   try {
-    const { nombre, tipo_organizacion, activo = '1' } = req.query;
+    const { nombre, nit, tipo_organizacion, activo = '1' } = req.query;
     let query = 'SELECT * FROM organizaciones_externas WHERE 1=1';
     const params = [];
 
@@ -65,6 +79,11 @@ const searchOrganizations = async (req, res) => {
     if (nombre) {
       query += ' AND nombre LIKE ?';
       params.push(`%${nombre}%`);
+    }
+
+    if (nit) {
+      query += ' AND nit = ?';
+      params.push(nit);
     }
 
     // Filtro por tipo de organización
@@ -133,14 +152,14 @@ const getOrganizationById = async (req, res) => {
   }
 };
 
-// HU2.4 - Edición de organización externa (UPDATE)
+// HU2.4 - Edición de organización externa
 const updateOrganization = async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, email, telefono, direccion, descripcion, tipo_organizacion, activo } = req.body;
+    const { nombre, nit, representante_legal, telefono, email, ubicacion, actividad_principal, tipo_organizacion, activo } = req.body;
 
     // Verificar que la organización existe
-    const checkQuery = 'SELECT id FROM organizaciones_externas WHERE id = ?';
+    const checkQuery = 'SELECT * FROM organizaciones_externas WHERE id = ?';
     const existing = await executeQuery(checkQuery, [id]);
 
     if (existing.length === 0) {
@@ -150,17 +169,15 @@ const updateOrganization = async (req, res) => {
       });
     }
 
-    // Verificar si el nuevo nombre ya existe (si se está cambiando)
-    if (nombre) {
-      const nameCheckQuery = 'SELECT id FROM organizaciones_externas WHERE nombre = ? AND id != ?';
-      const nameExists = await executeQuery(nameCheckQuery, [nombre, id]);
-
-      if (nameExists.length > 0) {
-        return res.status(409).json({
-          success: false,
-          message: 'Ya existe una organización con ese nombre'
-        });
-      }
+    // Verificar permisos: el creador o el secretario pueden editar
+    const isCreator = existing[0].creado_por === req.user.id;
+    const isSecretario = req.user.rol?.toUpperCase() === 'SECRETARIO';
+    
+    if (!isCreator && !isSecretario) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permiso para editar esta organización.'
+      });
     }
 
     // Construir query de actualización dinámicamente
@@ -171,22 +188,15 @@ const updateOrganization = async (req, res) => {
       updateFields.push('nombre = ?');
       updateParams.push(nombre);
     }
-    if (email !== undefined) {
-      updateFields.push('email = ?');
-      updateParams.push(email);
-    }
+    if (nit !== undefined) { updateFields.push('nit = ?'); updateParams.push(nit); }
+    if (representante_legal !== undefined) { updateFields.push('representante_legal = ?'); updateParams.push(representante_legal); }
     if (telefono !== undefined) {
       updateFields.push('telefono = ?');
       updateParams.push(telefono);
     }
-    if (direccion !== undefined) {
-      updateFields.push('direccion = ?');
-      updateParams.push(direccion);
-    }
-    if (descripcion !== undefined) {
-      updateFields.push('descripcion = ?');
-      updateParams.push(descripcion);
-    }
+    if (email !== undefined) { updateFields.push('email = ?'); updateParams.push(email); }
+    if (ubicacion !== undefined) { updateFields.push('ubicacion = ?'); updateParams.push(ubicacion); }
+    if (actividad_principal !== undefined) { updateFields.push('actividad_principal = ?'); updateParams.push(actividad_principal); }
     if (tipo_organizacion !== undefined) {
       updateFields.push('tipo_organizacion = ?');
       updateParams.push(tipo_organizacion);
@@ -194,13 +204,6 @@ const updateOrganization = async (req, res) => {
     if (activo !== undefined) {
       updateFields.push('activo = ?');
       updateParams.push(activo ? 1 : 0);
-    }
-
-    if (updateFields.length === 0) {
-      return res.status(400).json({
-        success: false,
-        message: 'No se proporcionaron campos para actualizar'
-      });
     }
 
     updateFields.push('fecha_actualizacion = NOW()');
@@ -236,61 +239,13 @@ const updateOrganization = async (req, res) => {
   }
 };
 
-// Función adicional: Obtener todas las organizaciones (para listado completo)
-const getAllOrganizations = async (req, res) => {
-  try {
-    const { page = 1, limit = 10, activo = '1' } = req.query;
-    const offset = (page - 1) * limit;
-
-    let query = 'SELECT * FROM organizaciones_externas WHERE 1=1';
-    const params = [];
-
-    if (activo !== undefined) {
-      query += ' AND activo = ?';
-      params.push(activo === '1' ? 1 : 0);
-    }
-
-    // Contar total de registros
-    const countQuery = query.replace('SELECT *', 'SELECT COUNT(*) as total');
-    const countResult = await executeQuery(countQuery, params);
-    const total = countResult[0].total;
-
-    // Obtener registros paginados
-    query += ' ORDER BY nombre ASC LIMIT ? OFFSET ?';
-    params.push(parseInt(limit), parseInt(offset));
-
-    const organizations = await executeQuery(query, params);
-
-    res.status(200).json({
-      success: true,
-      data: {
-        organizations,
-        pagination: {
-          page: parseInt(page),
-          limit: parseInt(limit),
-          total,
-          pages: Math.ceil(total / limit)
-        }
-      }
-    });
-
-  } catch (error) {
-    console.error('Error obteniendo organizaciones:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error interno del servidor',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
-    });
-  }
-};
-
 // HU2.5 - Eliminación de organización externa (soft delete)
 const deleteOrganization = async (req, res) => {
   try {
     const { id } = req.params;
 
     // Verificar que la organización exista
-    const checkQuery = 'SELECT id, activo FROM organizaciones_externas WHERE id = ?';
+    const checkQuery = 'SELECT id, activo, creado_por FROM organizaciones_externas WHERE id = ?';
     const organization = await executeQuery(checkQuery, [id]);
 
     if (organization.length === 0) {
@@ -300,29 +255,53 @@ const deleteOrganization = async (req, res) => {
       });
     }
 
-    // Validar que la organización no esté ya inactiva
-    if (organization[0].activo === 0) {
+    // Verificar si la organización está vinculada a algún evento
+    const checkEventsQuery = 'SELECT COUNT(*) as count FROM eventos WHERE organizacion_externa_id = ?';
+    const eventsResult = await executeQuery(checkEventsQuery, [id]);
+    
+    console.log('🗑️ DELETE Organization:', {
+      orgId: id,
+      creador_bd: organization[0].creado_por,
+      usuario_id: req.user.id,
+      usuario_rol: req.user.rol,
+      eventos_vinculados: eventsResult[0].count,
+      es_creador: organization[0].creado_por === req.user.id
+    });
+    
+    // REGLA: No se puede eliminar si está conectada a eventos
+    if (eventsResult[0].count > 0) {
+      console.log('❌ Eliminación bloqueada: organización tiene eventos vinculados');
       return res.status(400).json({
         success: false,
-        message: 'La organización ya está eliminada o inactiva.'
+        message: 'No se puede eliminar la organización porque está conectada a uno o más eventos.'
       });
     }
 
-    // Desactivar la organización (eliminación lógica)
-    const updateQuery = `
-      UPDATE organizaciones_externas 
-      SET activo = 0, fecha_actualizacion = NOW() 
-      WHERE id = ?
-    `;
-    await executeQuery(updateQuery, [id]);
+    // Verificar permisos: el creador o el secretario pueden eliminar
+    const isCreator = organization[0].creado_por === req.user.id;
+    const isSecretario = req.user.rol?.toUpperCase() === 'SECRETARIO';
+    
+    if (!isCreator && !isSecretario) {
+      console.log('❌ Eliminación bloqueada: usuario no es el creador ni secretario');
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permiso para eliminar esta organización.'
+      });
+    }
+
+    // Eliminar COMPLETAMENTE la organización de la base de datos (hard delete)
+    const deleteQuery = 'DELETE FROM organizaciones_externas WHERE id = ?';
+    await executeQuery(deleteQuery, [id]);
+
+    console.log(`✅ Organización ${id} eliminada PERMANENTEMENTE por usuario ${req.user.id}`);
 
     // Confirmar la eliminación
     res.status(200).json({
       success: true,
-      message: 'Organización externa eliminada exitosamente.',
+      message: 'Organización eliminada exitosamente.',
       data: {
         id,
-        estado: 'inactiva'
+        estado: 'eliminada'
       }
     });
 
@@ -335,6 +314,48 @@ const deleteOrganization = async (req, res) => {
     });
   }
 };
+// Obtener todas las organizaciones (opcional)
+const getAllOrganizations = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const offset = (page - 1) * limit;
+
+    // Obtener total de organizaciones activas
+    const countQuery = "SELECT COUNT(*) as total FROM organizaciones_externas WHERE activo = 1";
+    const countResult = await executeQuery(countQuery);
+    const total = countResult[0].total;
+
+    // Obtener organizaciones con paginación
+    const query = `
+      SELECT * FROM organizaciones_externas 
+      WHERE activo = 1 
+      ORDER BY fecha_registro DESC, nombre ASC 
+      LIMIT ${limit} OFFSET ${offset}
+    `;
+    const organizations = await executeQuery(query);
+
+    res.status(200).json({
+      success: true,
+      data: { 
+        organizations, 
+        pagination: {
+          total,
+          page,
+          limit,
+          pages: Math.ceil(total / limit)
+        }
+      },
+    });
+  } catch (error) {
+    console.error("Error obteniendo organizaciones:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error interno del servidor",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
 
 
 module.exports = {
@@ -342,7 +363,6 @@ module.exports = {
   searchOrganizations,
   getOrganizationById,
   updateOrganization,
-  getAllOrganizations,
-  deleteOrganization
+  deleteOrganization,
+  getAllOrganizations
 };
-

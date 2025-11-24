@@ -8,9 +8,11 @@ const {
   loginUser,
   getCurrentUser,
   updateProfile,
-  forgotPassword,
-  resetPassword,
+  forgotContraseña,
+  resetContraseña,
   logoutUser,
+  verifyEmail,
+  changePasswordAuthenticated,
 } = require("../controllers/authController");
 
 // Importar middlewares de autenticación JWT
@@ -28,9 +30,18 @@ router.get("/me", authenticateToken, getCurrentUser);
 // HU3.3 - Actualizar perfil de usuario
 router.put("/profile", authenticateToken, updateProfile);
 
+// Cambiar contraseña (usuario autenticado)
+router.put('/profile/password', authenticateToken, changePasswordAuthenticated);
+
 // HU3.4 - Recuperación de credenciales
-router.post("/forgot-password", forgotPassword);
-router.post("/reset-password", resetPassword);
+router.post("/forgot-contraseña", forgotContraseña);
+router.post("/reset-contraseña", resetContraseña);
+// Rutas alternativas ASCII para evitar problemas con caracteres especiales
+router.post("/forgot-password", forgotContraseña);
+router.post("/reset-password", resetContraseña);
+
+// Verificación de correo
+router.post("/verify-email", verifyEmail);
 
 // HU3.5 - Cierre de sesión
 router.post("/logout", authenticateToken, logoutUser);

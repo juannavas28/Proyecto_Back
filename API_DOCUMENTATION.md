@@ -346,13 +346,11 @@ Obtener información del usuario actual (requiere autenticación)
 **Request:**
 ```json
 {
-  "titulo": "Conferencia de Innovación",
+  "nombre:evento": "Conferencia de Innovación",
   "descripcion": "Evento sobre las últimas tendencias en innovación tecnológica",
   "fecha_inicio": "2024-03-15T09:00:00.000Z",
   "fecha_fin": "2024-03-15T17:00:00.000Z",
   "ubicacion": "Auditorio Central",
-  "capacidad_maxima": 150,
-  "costo_entrada": 25,
   "categoria": "Conferencia",
   "organizacion_externa_id": 1
 }
@@ -366,13 +364,12 @@ Obtener información del usuario actual (requiere autenticación)
   "data": {
     "event": {
       "id": 2,
-      "titulo": "Conferencia de Innovación",
+      "nombre_evento": "Conferencia de Innovación",
       "descripcion": "Evento sobre las últimas tendencias en innovación tecnológica",
       "fecha_inicio": "2024-03-15T09:00:00.000Z",
       "fecha_fin": "2024-03-15T17:00:00.000Z",
       "ubicacion": "Auditorio Central",
-      "capacidad_maxima": 150,
-      "costo_entrada": 25,
+    
       "categoria": "Conferencia",
       "estado": "borrador",
       "organizador_id": 1,
@@ -402,13 +399,12 @@ Listar eventos (con paginación)
     "events": [
       {
         "id": 1,
-        "titulo": "Conferencia de Tecnología",
+        "nombre_evento": "Conferencia de Tecnología",
         "descripcion": "Evento sobre las últimas tendencias tecnológicas",
         "fecha_inicio": "2024-02-15T09:00:00.000Z",
         "fecha_fin": "2024-02-15T17:00:00.000Z",
         "ubicacion": "Auditorio Principal",
-        "capacidad_maxima": 200,
-        "costo_entrada": 0,
+      
         "categoria": "Conferencia",
         "estado": "pendiente_revision",
         "organizador_id": 1,
@@ -439,13 +435,12 @@ Obtener evento por ID
   "data": {
     "event": {
       "id": 1,
-      "titulo": "Conferencia de Tecnología",
+      "nombre_evento": "Conferencia de Tecnología",
       "descripcion": "Evento sobre las últimas tendencias tecnológicas",
       "fecha_inicio": "2024-02-15T09:00:00.000Z",
       "fecha_fin": "2024-02-15T17:00:00.000Z",
       "ubicacion": "Auditorio Principal",
-      "capacidad_maxima": 200,
-      "costo_entrada": 0,
+    
       "categoria": "Conferencia",
       "estado": "pendiente_revision",
       "organizador_id": 1,
@@ -467,13 +462,12 @@ Obtener evento por ID
 **Request:**
 ```json
 {
-  "titulo": "Conferencia de Tecnología Actualizada",
+  "nombre_evento": "Conferencia de Tecnología Actualizada",
   "descripcion": "Evento actualizado sobre las últimas tendencias tecnológicas",
   "fecha_inicio": "2024-02-20T09:00:00.000Z",
   "fecha_fin": "2024-02-20T17:00:00.000Z",
   "ubicacion": "Nuevo Auditorio",
-  "capacidad_maxima": 300,
-  "costo_entrada": 50
+
 }
 ```
 
@@ -485,13 +479,12 @@ Obtener evento por ID
   "data": {
     "event": {
       "id": 1,
-      "titulo": "Conferencia de Tecnología Actualizada",
+      "nombre_evento": "Conferencia de Tecnología Actualizada",
       "descripcion": "Evento actualizado sobre las últimas tendencias tecnológicas",
       "fecha_inicio": "2024-02-20T09:00:00.000Z",
       "fecha_fin": "2024-02-20T17:00:00.000Z",
       "ubicacion": "Nuevo Auditorio",
-      "capacidad_maxima": 300,
-      "costo_entrada": 50,
+    
       "categoria": "Conferencia",
       "estado": "borrador",
       "fecha_actualizacion": "2024-01-15T16:00:00.000Z"
@@ -511,13 +504,11 @@ Obtener evento por ID
   "data": {
     "event": {
       "id": 1,
-      "titulo": "Conferencia de Tecnología",
+      "nombre_evento": "Conferencia de Tecnología",
       "descripcion": "Evento sobre las últimas tendencias tecnológicas",
       "fecha_inicio": "2024-02-15T09:00:00.000Z",
       "fecha_fin": "2024-02-15T17:00:00.000Z",
       "ubicacion": "Auditorio Principal",
-      "capacidad_maxima": 200,
-      "costo_entrada": 0,
       "categoria": "Conferencia",
       "estado": "pendiente_revision",
       "fecha_envio_validacion": "2024-01-15T16:30:00.000Z",
